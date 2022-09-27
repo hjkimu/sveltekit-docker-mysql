@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  frontend:
+    image: svelte-app1
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: development
+    ports:
+      - 3000:3000
+    networks:
+        - sveltekit 
+    depends_on:
+        - mysql
+  mysql:
+    image: 'mysql:8.0'
+    ports:
+        - '${FORWARD_DB_PORT:-3306}:3306'
+    command:
+        - --sql-mode=NO_ENGINE_SUBSTITUTION
+    environment:
+        MYSQL_ROOT_PASSWORD: password 
+        MYSQL_DATABASE: sveltekit
+        MYSQL_USER: sveltekit
+        MYSQL_PASSWORD: sveltekit
+        MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+        - 'sveltekitmysql:/var/lib/mysql'
+    networks:
+        - sveltekit
+    healthcheck:
+        test: ["CMD", "sveltekit", "ping", "-psveltekit"]
+        retries: 3
+        timeout: 5s
+
+networks:
+    sveltekit:
+        driver: bridge
+volumes:
+    sveltekitmysql:
+        driver: local
